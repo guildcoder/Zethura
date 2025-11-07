@@ -1,14 +1,35 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Zethura Royale</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Zethura Royale — Prototype</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <canvas id="game" width="1024" height="640"></canvas>
+  <div id="ui">
+    <div id="topbar">
+      <div id="title">Zethura Royale</div>
+      <div id="timer">0:00</div>
+    </div>
+    <div id="hud">
+      <div id="energy">Energy: 0</div>
+      <div id="mode">Mode: Arena</div>
+    </div>
+  </div>
+
+  <div id="canvas-wrap">
+    <canvas id="game"></canvas>
+  </div>
+
+  <div id="controls">
+    <small>WASD / Arrow keys to move — Space to Dash</small>
+  </div>
+
   <script type="module" src="main.js"></script>
 </body>
 </html>
