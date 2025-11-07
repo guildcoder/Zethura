@@ -1,14 +1,23 @@
-body {
-  margin: 0;
-  background: #05060a;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-canvas {
-  box-shadow: 0 0 40px rgba(0,255,255,0.2);
-  background: #030409;
-  border-radius: 12px;
+:root{
+  --bg:#05060a;
+  --panel-bg: rgba(4,6,12,0.6);
+  --neon: #00f0ff;
+  --accent: #ff3db8;
+  --glass: rgba(255,255,255,0.04);
 }
 
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+body{background:linear-gradient(180deg,#05060a,#07080a);display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px;}
+
+#canvas-wrap{display:flex;justify-content:center;align-items:center;width:100%;flex:1}
+canvas{background:#03040a;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,0.7);max-width:100%;height:auto;}
+
+#ui{position:fixed;left:18px;top:18px;color:white;z-index:20}
+#topbar{display:flex;gap:14px;align-items:center}
+#title{font-family:Orbitron,monospace;color:var(--neon);font-size:20px}
+#timer{font-size:14px;color:#cfefff}
+#hud{margin-top:8px;background:var(--panel-bg);padding:8px 12px;border-radius:8px}
+#hud div{font-size:14px;color:#e6faff}
+
+#controls{position:fixed;right:16px;bottom:12px;color:#99b7c7;background:var(--glass);padding:6px 10px;border-radius:8px;font-size:12px}
