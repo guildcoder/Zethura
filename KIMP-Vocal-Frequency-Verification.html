@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#15120d" />
+<title>KIMP Vocal Frequency Verification</title>
+<style>
+  :root{
+    --bg:#120f0a;
+    --panel:#1d1912;
+    --panel2:#2a2419;
+    --amber:#f2b84b;
+    --amber2:#ffd988;
+    --green:#8ddf8a;
+    --red:#ff6b5f;
+    --ink:#f4ead6;
+    --muted:#b9aa8d;
+    --line:#5d4d34;
+    --glow:0 0 18px rgba(242,184,75,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:
+    radial-gradient(circle at 50% 0%,#2b2418 0,#17130e 38%,#0c0a07 100%);
+    color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  body{display:flex;justify-content:center;padding:18px}
+  .wrap{width:min(920px,100%)}
+  .shell{
+    border:2px solid #4e402b;border-radius:24px;padding:16px;background:
+    linear-gradient(180deg,rgba(255,255,255,.03),transparent 20%),
+    linear-gradient(135deg,#1c1811,#100d09);
+    box-shadow:0 18px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.03);
+  }
+  .top{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+  .brand h1{margin:0;font-size:clamp(30px,8vw,64px);letter-spacing:.08em;color:var(--amber2);text-shadow:var(--glow)}
+  .brand .freq{font-size:clamp(18px,4vw,28px);color:var(--amber)}
+  .brand .sub{font-size:12px;color:var(--muted);letter-spacing:.16em;margin-top:6px}
+  .onair{border:1px solid #6f2b24;color:#ff8f84;background:#2a1110;border-radius:999px;padding:8px 12px;font-weight:800;letter-spacing:.15em;box-shadow:0 0 16px rgba(255,80,65,.2)}
+  .screen{
+    margin-top:16px;border:2px solid #3c3325;border-radius:18px;padding:14px;background:
+    repeating-linear-gradient(180deg,rgba(255,255,255,.015) 0 2px,transparent 2px 4px),
+    linear-gradient(180deg,#131a12,#0b100b);
+    min-height:480px;position:relative;overflow:hidden;
+    box-shadow:inset 0 0 30px rgba(0,0,0,.8),0 0 0 4px #18140e;
+  }
+  .statusbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#b8d9b5;font-size:12px;letter-spacing:.08em}
+  .mainmsg{margin:24px 0 10px;text-align:center;font-size:clamp(18px,4vw,30px);color:var(--amber2);text-shadow:var(--glow)}
+  .submsg{text-align:center;color:#b8c9b4;min-height:42px}
+  .meter{height:14px;border:1px solid #4f5e4d;background:#091009;border-radius:999px;overflow:hidden;margin:14px auto;max-width:560px}
+  .meter>div{height:100%;width:0;background:linear-gradient(90deg,#4f9e58,#b4e56a,#ffd45b);transition:width .08s linear}
+  .highway{
+    position:relative;height:210px;margin-top:18px;border:1px solid #384336;border-radius:14px;
+    background:
+      linear-gradient(90deg,transparent 0 74%,rgba(242,184,75,.13) 74% 75%,transparent 75%),
+      repeating-linear-gradient(180deg,transparent 0 51px,rgba(133,170,128,.12) 51px 52px),
+      linear-gradient(180deg,#0d140d,#081008);
+    overflow:hidden;
+  }
+  .strike{position:absolute;left:74%;top:0;bottom:0;width:3px;background:var(--amber);box-shadow:0 0 14px rgba(242,184,75,.8)}
+  .target{position:absolute;height:28px;border-radius:999px;background:linear-gradient(180deg,#e5c060,#a97622);box-shadow:0 0 16px rgba(242,184,75,.35);left:100%}
+  .target.hit{background:linear-gradient(180deg,#c9f08f,#5ca85f);box-shadow:0 0 18px rgba(100,230,120,.6)}
+  .pitchdot{position:absolute;width:18px;height:18px;border-radius:50%;left:calc(74% - 8px);top:96px;background:#e8f7e4;border:3px solid #4cc260;box-shadow:0 0 18px rgba(89,230,117,.8);opacity:0;transition:top .06s linear}
+  .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+  button{
+    appearance:none;border:none;border-radius:12px;padding:14px 18px;font:inherit;font-weight:900;letter-spacing:.06em;
+    color:#1a1408;background:linear-gradient(180deg,#ffd879,#d59b2e);box-shadow:0 6px 0 #7f571b,0 10px 20px rgba(0,0,0,.25);
+  }
+  button:active{transform:translateY(3px);box-shadow:0 3px 0 #7f571b}
+  button.secondary{background:#262118;color:var(--ink);box-shadow:0 5px 0 #0e0c09;border:1px solid #5c4d35}
+  button[disabled]{opacity:.4;filter:grayscale(1)}
+  .readout{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .card{border:1px solid #344332;border-radius:12px;padding:10px;background:#0d130d;text-align:center}
+  .card .k{font-size:10px;color:#8fa38d;letter-spacing:.12em}
+  .card .v{font-size:18px;color:#d7eed4;margin-top:4px}
+  .clue{display:none;text-align:center;margin:26px auto 8px;padding:18px;border:2px solid var(--amber);border-radius:14px;background:#241c0f;max-width:620px}
+  .clue h2{color:var(--amber2);margin:0 0 8px}
+  .clue .code{font-size:clamp(28px,7vw,58px);letter-spacing:.16em;color:#fff3cb;text-shadow:var(--glow)}
+  .tiny{font-size:11px;color:#8f9d8d;text-align:center;margin-top:12px;line-height:1.5}
+  .scan{pointer-events:none;position:absolute;inset:0;background:linear-gradient(180deg,transparent 0 48%,rgba(255,255,255,.02) 50%,transparent 52%);background-size:100% 8px;mix-blend-mode:screen;opacity:.35}
+  @media (max-width:580px){
+    body{padding:8px}.shell{border-radius:16px;padding:10px}.screen{padding:10px;min-height:520px}
+    .readout{grid-template-columns:1fr 1fr}.readout .card:last-child{grid-column:1/-1}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="shell">
+    <div class="top">
+      <div class="brand">
+        <h1>KIMP</h1>
+        <div class="freq">Vocal Frequency Verification</div>
+        <div class="sub">AUTHORIZED BROADCAST PERSONNEL ONLY</div>
+      </div>
+      <div class="onair">ON AIR</div>
+    </div>
+
+    <div class="screen">
+      <div class="statusbar">
+        <span id="micStatus">MIC: STANDBY</span>
+        <span id="roundStatus">ROUND: 0 / 3</span>
+        <span id="signalStatus">SIGNAL: IDLE</span>
+      </div>
+
+      <div class="mainmsg" id="mainMsg">VOICEPRINT ACCESS TERMINAL</div>
+      <div class="submsg" id="subMsg">Match the transmitted tones to verify station clearance.</div>
+
+      <div class="meter"><div id="meterFill"></div></div>
+
+      <div class="highway" id="highway">
+        <div class="strike"></div>
+        <div class="pitchdot" id="pitchDot"></div>
+      </div>
+
+      <div class="readout">
+        <div class="card"><div class="k">TARGET</div><div class="v" id="targetNote">--</div></div>
+        <div class="card"><div class="k">DETECTED</div><div class="v" id="detectedNote">--</div></div>
+        <div class="card"><div class="k">GUIDANCE</div><div class="v" id="guidance">WAITING</div></div>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn">BEGIN TEST</button>
+        <button class="secondary" id="retryBtn" style="display:none">RETRY ROUND</button>
+      </div>
+
+      <div class="clue" id="clue">
+        <h2>VOICEPRINT ACCEPTED</h2>
+        <div>Auxiliary broadcast channel unlocked.</div>
+        <div class="code">92.1</div>
+      </div>
+
+      <div class="tiny">
+        Best results: use Safari or Chrome, allow microphone access, and hold the phone 8–14 inches from your face.
+      </div>
+      <div class="scan"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const ui = {
+    mic:$("micStatus"), round:$("roundStatus"), signal:$("signalStatus"),
+    main:$("mainMsg"), sub:$("subMsg"), meter:$("meterFill"),
+    highway:$("highway"), dot:$("pitchDot"), target:$("targetNote"),
+    detected:$("detectedNote"), guidance:$("guidance"),
+    start:$("startBtn"), retry:$("retryBtn"), clue:$("clue")
+  };
+
+  let audioCtx, analyser, micStream, source, rafId;
+  let waveform, activeRound = 0, running = false, listenEnabled = false;
+  let currentTarget = null, scoreWindow = 0, roundResolve = null;
+  let notesEls = [];
+
+  const NOTE_FREQ = {
+    G3:196.00, A3:220.00, B3:246.94, C4:261.63, D4:293.66
+  };
+
+  const rounds = [
+    {name:"SIGNAL ACQUISITION", notes:[{n:"A3", start:0.8, dur:1.7}]},
+    {name:"FREQUENCY SHIFT", notes:[{n:"G3", start:0.7, dur:1.3},{n:"C4", start:2.45, dur:1.5}]},
+    {name:"AUTHENTICATION SEQUENCE", notes:[
+      {n:"A3", start:0.7, dur:0.7},
+      {n:"D4", start:1.8, dur:1.8},
+      {n:"B3", start:4.0, dur:0.7}
+    ]}
+  ];
+
+  function setMessage(a,b){ui.main.textContent=a;ui.sub.textContent=b||""}
+  function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+  function noteName(freq){
+    if(!freq || !isFinite(freq)) return "--";
+    const midi = Math.round(69 + 12*Math.log2(freq/440));
+    const names=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+    return names[(midi+1200)%12] + (Math.floor(midi/12)-1);
+  }
+  function centsOff(freq,target){
+    return 1200*Math.log2(freq/target);
+  }
+  function autoCorrelate(buf, sampleRate){
+    let rms=0;
+    for(let i=0;i<buf.length;i++) rms += buf[i]*buf[i];
+    rms=Math.sqrt(rms/buf.length);
+    if(rms<0.012) return -1;
+
+    let r1=0,r2=buf.length-1,thres=0.2;
+    for(let i=0;i<buf.length/2;i++){if(Math.abs(buf[i])<thres){r1=i;break}}
+    for(let i=1;i<buf.length/2;i++){if(Math.abs(buf[buf.length-i])<thres){r2=buf.length-i;break}}
+    buf=buf.slice(r1,r2);
+
+    const c=new Array(buf.length).fill(0);
+    for(let i=0;i<buf.length;i++){
+      for(let j=0;j<buf.length-i;j++) c[i]+=buf[j]*buf[j+i];
+    }
+    let d=0;
+    while(d+1<c.length && c[d]>c[d+1]) d++;
+    let max=-1,maxpos=-1;
+    for(let i=d;i<c.length;i++){if(c[i]>max){max=c[i];maxpos=i}}
+    if(maxpos<=0) return -1;
+    let T0=maxpos;
+    if(T0>0 && T0<c.length-1){
+      const x1=c[T0-1],x2=c[T0],x3=c[T0+1];
+      const a=(x1+x3-2*x2)/2;
+      const b=(x3-x1)/2;
+      if(a) T0=T0-b/(2*a);
+    }
+    return sampleRate/T0;
+  }
+
+  async function initAudio(){
+    if(!navigator.mediaDevices?.getUserMedia) throw new Error("Microphone access is not supported.");
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    await audioCtx.resume();
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},
+      video:false
+    });
+    source=audioCtx.createMediaStreamSource(micStream);
+    analyser=audioCtx.createAnalyser();
+    analyser.fftSize=2048;
+    source.connect(analyser);
+    waveform=new Float32Array(analyser.fftSize);
+    ui.mic.textContent="MIC: ACTIVE";
+    monitorPitch();
+  }
+
+  function monitorPitch(){
+    if(!analyser) return;
+    analyser.getFloatTimeDomainData(waveform);
+    let freq=autoCorrelate(waveform,audioCtx.sampleRate);
+    if(freq>70 && freq<900){
+      ui.detected.textContent=noteName(freq);
+      ui.dot.style.opacity=listenEnabled?"1":"0";
+      if(currentTarget && listenEnabled){
+        let cents=centsOff(freq,NOTE_FREQ[currentTarget]);
+        let mapped=Math.max(8,Math.min(184,104-cents*.22));
+        ui.dot.style.top=mapped+"px";
+        if(Math.abs(cents)<=60){
+          ui.guidance.textContent="LOCKED";
+          ui.guidance.style.color="#9eef97";
+          scoreWindow=Math.min(100,scoreWindow+2.3);
+        } else {
+          ui.guidance.textContent=cents<0?"HIGHER":"LOWER";
+          ui.guidance.style.color="#ffd16e";
+          scoreWindow=Math.max(0,scoreWindow-.8);
+        }
+        ui.meter.style.width=scoreWindow+"%";
+      }
+    } else {
+      ui.detected.textContent="--";
+      ui.guidance.textContent=listenEnabled?"HUM NOW":"WAITING";
+      ui.dot.style.opacity="0";
+      if(listenEnabled) scoreWindow=Math.max(0,scoreWindow-.5);
+      ui.meter.style.width=scoreWindow+"%";
+    }
+    rafId=requestAnimationFrame(monitorPitch);
+  }
+
+  async function playTone(freq,duration=.9){
+    const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+    osc.type="sine";osc.frequency.value=freq;
+    gain.gain.setValueAtTime(0,audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(.18,audioCtx.currentTime+.03);
+    gain.gain.setValueAtTime(.18,audioCtx.currentTime+duration-.08);
+    gain.gain.linearRampToValueAtTime(0,audioCtx.currentTime+duration);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();osc.stop(audioCtx.currentTime+duration+.02);
+    await sleep((duration+.1)*1000);
+  }
+
+  function clearNotes(){notesEls.forEach(n=>n.remove());notesEls=[]}
+  function renderRound(round){
+    clearNotes();
+    const total=Math.max(...round.notes.map(x=>x.start+x.dur))+0.8;
+    round.notes.forEach(note=>{
+      const el=document.createElement("div");
+      el.className="target";
+      el.style.top=(note.n==="D4"?28:note.n==="C4"?58:note.n==="B3"?91:note.n==="A3"?124:157)+"px";
+      el.style.width=Math.max(70,note.dur*130)+"px";
+      el.dataset.start=note.start;el.dataset.dur=note.dur;el.dataset.note=note.n;
+      ui.highway.appendChild(el);notesEls.push(el);
+    });
+    return total;
+  }
+
+  async function countdown(){
+    for(const x of ["READY","3","2","1"]){
+      setMessage(x, x==="READY"?"Listen, then match the notes at the transmission line.":"");
+      await sleep(x==="READY"?700:650);
+    }
+  }
+
+  async function previewRound(round){
+    setMessage("REFERENCE TRANSMISSION","Listen carefully.");
+    for(const n of round.notes){
+      ui.target.textContent=n.n;
+      await playTone(NOTE_FREQ[n.n], Math.min(.75,n.dur*.55));
+      await sleep(220);
+    }
+    ui.target.textContent="--";
+    await sleep(350);
+  }
+
+  async function executeRound(index){
+    const round=rounds[index];
+    activeRound=index+1;
+    ui.round.textContent=`ROUND: ${activeRound} / 3`;
+    ui.signal.textContent="SIGNAL: ARMED";
+    ui.retry.style.display="none";
+    ui.clue.style.display="none";
+    scoreWindow=0;ui.meter.style.width="0%";
+    await previewRound(round);
+    await countdown();
+
+    setMessage(round.name,"Hum the notes as they cross the amber transmission line.");
+    const total=renderRound(round);
+    const start=performance.now();
+    const speed=(ui.highway.clientWidth+260)/total;
+    let notePasses=0, successUnits=0, expectedUnits=0;
+    running=true;listenEnabled=true;
+
+    await new Promise(resolve=>{
+      roundResolve=resolve;
+      function frame(now){
+        const t=(now-start)/1000;
+        notesEls.forEach((el,i)=>{
+          const n=round.notes[i];
+          const left=ui.highway.clientWidth-(t-n.start)*speed;
+          el.style.left=left+"px";
+          const line=ui.highway.clientWidth*.74;
+          const active=left<=line+25 && left+el.offsetWidth>=line-25;
+          if(active){
+            currentTarget=n.n;ui.target.textContent=n.n;
+            expectedUnits++;
+            if(scoreWindow>45){successUnits++;el.classList.add("hit")}
+          }
+          if(left+el.offsetWidth<0 && !el.dataset.done){el.dataset.done="1";notePasses++}
+        });
+        if(notePasses>=round.notes.length || t>total+1.2){
+          running=false;listenEnabled=false;currentTarget=null;ui.target.textContent="--";
+          resolve(successUnits/Math.max(1,expectedUnits));
+          return;
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    });
+
+    const ratio=await roundResolve;
+    return ratio>0.38;
+  }
+
+  async function startGame(){
+    ui.start.disabled=true;
+    try{
+      if(!audioCtx) await initAudio();
+      setMessage("CALIBRATING ROOM SIGNAL","Remain quiet for one moment.");
+      ui.signal.textContent="SIGNAL: CALIBRATING";
+      await sleep(1200);
+
+      for(let i=0;i<rounds.length;i++){
+        const ok=await executeRound(i);
+        if(!ok){
+          ui.signal.textContent="SIGNAL: MISMATCH";
+          setMessage("FREQUENCY MISMATCH","Retune your voice and retransmit.");
+          ui.guidance.textContent="TRY AGAIN";
+          ui.retry.style.display="inline-block";
+          ui.start.disabled=false;
+          ui.start.textContent="RESTART TEST";
+          return;
+        }
+        ui.signal.textContent="SIGNAL: VERIFIED";
+        setMessage(`ROUND ${i+1} VERIFIED`, i<2?"Preparing the next sequence.":"");
+        await sleep(1100);
+      }
+      clearNotes();
+      ui.signal.textContent="SIGNAL: AUTHORIZED";
+      setMessage("VOCAL FREQUENCY VERIFIED","KIMP transmission access granted.");
+      ui.clue.style.display="block";
+      ui.start.style.display="none";
+      ui.retry.style.display="none";
+    }catch(err){
+      console.error(err);
+      setMessage("MICROPHONE ERROR",err.message||"Permission was denied.");
+      ui.sub.textContent="Open this page in Safari or Chrome and allow microphone access.";
+      ui.start.disabled=false;
+    }
+  }
+
+  ui.start.addEventListener("click",startGame);
+  ui.retry.addEventListener("click",async()=>{
+    ui.retry.style.display="none";ui.start.disabled=true;
+    const ok=await executeRound(activeRound-1);
+    ui.start.disabled=false;
+    if(ok){
+      setMessage(`ROUND ${activeRound} VERIFIED`,"Press restart to continue from the beginning.");
+      ui.start.textContent="RESTART TEST";
+    }else{
+      setMessage("FREQUENCY MISMATCH","Try the round again.");
+      ui.retry.style.display="inline-block";
+    }
+  });
+
+  window.addEventListener("beforeunload",()=>{
+    if(rafId) cancelAnimationFrame(rafId);
+    micStream?.getTracks().forEach(t=>t.stop());
+  });
+})();
+</script>
+</body>
+</html>
